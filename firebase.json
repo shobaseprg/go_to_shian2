@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "go-to-sian2-b7a86",
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

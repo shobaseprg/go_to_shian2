@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8">
+  <title>Chat App</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+  <h3></h3>
+  <button type="button" id="logout">ログアウト</button></br></br>
+  <div id="info"></div>
+  <div id="app">
+    <ul id="messages" v-for="chatMessage in chatMessages">
+      <li>{{chatMessage.message}}<span>&emsp;by&emsp;</span>{{chatMessage.userName}}</li>
+    </ul>
+  </div>
+
+  <form>
+    <input type="text" id="message">
+    <button id="submit-button">送信</button>
+  </form>
+
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.3/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/ui/4.6.1/firebase-ui-auth.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+  <script src="js/config.js"></script>
+  <!-- <script src="js/main.js"></script> -->
+
+  <script>
+    let loginUser;
+
+    firebase.auth().onAuthStateChanged((user) => {
+      let status = document.querySelector('h3');
+      let info = document.querySelector('#info');
+      loginUser = user;
+
+      if (user) {
+        status.innerText = 'ログイン中';
+        info.innerHTML = `uid : ${user.uid}`;
+      }
+      else {
+        location.href = "/";
+      }
+
+
+      let logout = document.getElementById("logout");
+
+      logout.addEventListener("click", () => {
+        firebase.auth().signOut().then(() => {
+          console.log("ログアウトしました");
+          location.href = "/";
+        })
+          .catch((error) => {
+            console.log(`ログアウト時にエラーが発生しました (${error})`);
+          });
+      });
+    });
+  </script>
+
+  <script>
+
+
+    let chatMessages = [];
+
+    const app = new Vue({
+      el: '#app',
+      data: {
+        chatMessages: chatMessages
+      }
+    });
+
+    const db = firebase.firestore();
+    db.settings({
+      timestampsInSnapshots: true
+    });
+    const collection = db.collection('messages');
+    const form = document.querySelector('form');
+    const submitBtn = document.getElementById('submit-button');
+
+    collection.orderBy('created').onSnapshot(snapshot => {/* messageCollectionに変化があった場合 */
+      snapshot.docChanges().forEach(change => {/* snapshot.docChanges()の返り値は、コレクション自体 */
+        if (change.type === 'added') {/* コレクションのデータ変化が追加出会った場合？ */
+          // chatMessages.push(change.doc.data().message)
+          chatMessages.push(change.doc.data())
+        }
+      });
+    });
+
+    submitBtn.addEventListener('click', e => {
+      e.preventDefault();
+
+      const val = message.value.trim();
+      if (val === "") return;
+
+      message.value = '';
+      message.focus();
+
+      collection.add({
+        message: val,
+        userName: loginUser.displayName,
+        created: firebase.firestore.FieldValue.serverTimestamp()
+      })
+        .catch(error => {
+          console.log(error);
+        });
+    });
+
+    message.focus();
+
+  </script>
+
+
+
+</body>
+
+</html>

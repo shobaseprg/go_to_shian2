@@ -1,5 +1,3 @@
-'use strict';
-
 let chatMessages = [];
 
 const app = new Vue({
@@ -20,7 +18,7 @@ const submitBtn = document.getElementById('submit-button');
 collection.orderBy('created').onSnapshot(snapshot => {/* messageCollectionに変化があった場合 */
   snapshot.docChanges().forEach(change => {/* snapshot.docChanges()の返り値は、コレクション自体 */
     if (change.type === 'added') {/* コレクションのデータ変化が追加出会った場合？ */
-      chatMessages.push(change.doc.data().message)
+      chatMessages.push(change.doc.data())
     }
   });
 });
@@ -36,6 +34,7 @@ submitBtn.addEventListener('click', e => {
 
   collection.add({
     message: val,
+    userName: loginUser.displayName,
     created: firebase.firestore.FieldValue.serverTimestamp()
   })
     .catch(error => {
